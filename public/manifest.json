@@ -15,6 +15,5 @@
         "multiSelect": false
       }
     }
-  },
-  "dependencies": ["ffmpeg"]
+  }
 }
