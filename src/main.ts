@@ -1,17 +1,19 @@
-import url from "node:url";
 import { calcChannels, ChannelInfo } from "./calcChannels";
 
 import * as echarts from "echarts";
 
 import "./index.css";
 import { getColorMap, lightColorMap } from "./color";
+import { fileURLToPath, sortArrayAsTarget } from "./utils";
 
 const chartDom = document.getElementById("chart");
 const myChart = echarts.init(chartDom);
 let channelInfo: ChannelInfo | null = null;
 let colorMap = lightColorMap;
-
-const seriesKeys: (keyof ChannelInfo)[] = ["red", "green", "blue", "gray"];
+const seriesKeySeq: (keyof ChannelInfo)[] = ["red", "green", "blue", "light"];
+let seriesKeys: (keyof ChannelInfo)[] = ["red", "green", "blue", "light"];
+let tempSeriesKeys: (keyof ChannelInfo)[] | null = null;
+let isOver = false;
 
 // Listen to plugin creation
 eagle.onPluginCreate(async () => {
@@ -32,10 +34,12 @@ eagle.onPluginCreate(async () => {
 });
 
 function generateHistogram(channelInfo: ChannelInfo) {
-  myChart.setOption(genOption(channelInfo));
+  myChart.setOption(genOption(channelInfo), true);
 }
 
 function genOption(channelInfo: ChannelInfo) {
+  console.log(seriesKeys);
+
   return {
     grid: {
       left: "4", // 左边距
@@ -43,7 +47,7 @@ function genOption(channelInfo: ChannelInfo) {
       top: "4", // 上边距
       bottom: "4", // 下边距
     },
-    color: [colorMap.red, colorMap.green, colorMap.blue, colorMap.gray],
+    color: [colorMap.red, colorMap.green, colorMap.blue, colorMap.light],
     xAxis: {
       show: false,
       data: channelInfo.red.map((_, i) => i),
@@ -73,6 +77,11 @@ function genOption(channelInfo: ChannelInfo) {
           focus: "series",
         },
         animationDelay: index * 50,
+        itemStyle: {
+          color: colorMap[name as keyof typeof colorMap],
+          opacity: 0.7,
+        },
+        z: index,
       };
     }),
     animationEasing: "elasticOut" as const,
@@ -96,9 +105,55 @@ async function handleTheme(theme?: string) {
   document.body.setAttribute("theme", theme);
 }
 
-function fileURLToPath(fileUrl: string) {
-  if (fileUrl.startsWith("file://")) {
-    return url.fileURLToPath(fileUrl);
+["red", "green", "blue", "light"].map((key) => {
+  const inputNode = document.querySelector("#" + key);
+  if (inputNode) {
+    inputNode.setAttribute("checked", "true");
+
+    inputNode.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement;
+      let currentSeriesKeys = [...(tempSeriesKeys || seriesKeys)];
+      if (target.checked) {
+        if (!currentSeriesKeys.includes(key as keyof ChannelInfo)) {
+          currentSeriesKeys.push(key as keyof ChannelInfo);
+        }
+      } else {
+        currentSeriesKeys = currentSeriesKeys.filter((k) => k !== key);
+      }
+      currentSeriesKeys = sortArrayAsTarget(currentSeriesKeys, seriesKeySeq);
+      if (tempSeriesKeys) {
+        tempSeriesKeys = currentSeriesKeys;
+      } else {
+        seriesKeys = currentSeriesKeys;
+      }
+      if (channelInfo) {
+        generateHistogram(channelInfo);
+      }
+    });
+
+    inputNode.addEventListener("mouseover", () => {
+      isOver = true;
+      if (tempSeriesKeys === null) {
+        tempSeriesKeys = seriesKeys;
+      }
+      seriesKeys = [key as keyof ChannelInfo];
+      if (channelInfo) {
+        generateHistogram(channelInfo);
+      }
+    });
+
+    inputNode.addEventListener("mouseout", () => {
+      isOver = false;
+      setTimeout(() => {
+        if (isOver) return;
+        if (tempSeriesKeys) {
+          seriesKeys = tempSeriesKeys;
+          tempSeriesKeys = null;
+        }
+        if (channelInfo) {
+          generateHistogram(channelInfo);
+        }
+      }, 300);
+    });
   }
-  return fileUrl;
-}
+});

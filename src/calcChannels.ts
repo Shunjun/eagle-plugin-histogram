@@ -5,7 +5,7 @@ export type ChannelInfo = {
   green: number[];
   blue: number[];
   alpha: number[];
-  gray: number[];
+  light: number[];
 };
 
 export function calcChannels(filePath: string) {
@@ -21,7 +21,7 @@ export function calcChannels(filePath: string) {
         green: new Array(256).fill(0),
         blue: new Array(256).fill(0),
         alpha: new Array(256).fill(0),
-        gray: new Array(256).fill(0),
+        light: new Array(256).fill(0),
       };
 
       lenna.scan(0, 0, width, height, function (_, __, idx) {
@@ -34,8 +34,8 @@ export function calcChannels(filePath: string) {
         channelInfo.green[green]++;
         channelInfo.blue[blue]++;
         channelInfo.alpha[alpha]++;
-        const gray = Math.round(red * 0.299 + green * 0.587 + blue * 0.114);
-        channelInfo.gray[gray]++;
+        const light = Math.round(red * 0.299 + green * 0.587 + blue * 0.114);
+        channelInfo.light[light]++;
       });
 
       resolve(channelInfo);

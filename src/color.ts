@@ -1,13 +1,13 @@
-type ColorKeys = "divider" | "red" | "blue" | "green" | "gray";
+type ColorKeys = "divider" | "red" | "blue" | "green" | "light";
 
 type ColorMap = Record<ColorKeys, string>;
 
 export const darkColorMap: ColorMap = {
   divider: "#333",
-  red: "#FF0000",
-  green: "#00FF00",
-  blue: "#0000FF",
-  gray: "#4b4b4b",
+  red: "#b73430",
+  green: "#5aa34a",
+  blue: "#3571df",
+  light: "#c2c2c2",
 };
 
 export const lightColorMap: ColorMap = {
@@ -15,7 +15,7 @@ export const lightColorMap: ColorMap = {
   red: "#FF0000",
   green: "#00FF00",
   blue: "#0000FF",
-  gray: "#d3cbca",
+  light: "#d3cbca",
 };
 
 async function isDarkTheme() {
